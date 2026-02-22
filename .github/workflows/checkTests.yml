@@ -19,5 +19,12 @@ jobs:
       - name: Install deps
         run: go mod download
 
+      - name: Create vendor
+        run: |
+          cd internal/analyzer/testdata/src/example
+          go mod init example.com/test
+          go get go.uber.org/zap
+          go mod vendor
+
       - name: Run tests
         run: go test ./internal/analyzer/...
