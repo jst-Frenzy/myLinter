@@ -13,7 +13,11 @@ import (
 	"unicode"
 )
 
-var sensitiveWords = []string{"password:", "api_key=", "token:"}
+var configPath string
+
+func SetConfigPath(path string) {
+	configPath = path
+}
 
 var loggerConfigs = []LoggerConfig{
 	{
@@ -27,6 +31,12 @@ var loggerConfigs = []LoggerConfig{
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
+	cfg, err := LoadConfig(configPath)
+	if err != nil {
+		pass.Reportf(0, "failed to load config: %v", err)
+		cfg = DefaultConfig()
+	}
+
 	for _, file := range pass.Files {
 		ast.Inspect(file, func(node ast.Node) bool {
 			n, ok := node.(*ast.CallExpr)
@@ -69,7 +79,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			newLog, problems := processLogMessage(message)
+			newLog, problems := processLogMessage(message, cfg)
 
 			if len(problems) > 0 {
 				pass.Report(analysis.Diagnostic{
@@ -97,25 +107,25 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return nil, nil
 }
 
-func processLogMessage(message string) (string, []string) {
+func processLogMessage(message string, config *Config) (string, []string) {
 	var problems []string
 	newLog := message
-	if hasSensitiveData(message) {
-		newLog = blurSensitiveData(newLog)
+	if config.Checks.SensitiveData && hasSensitiveData(message, config) {
+		newLog = blurSensitiveData(newLog, config)
 		problems = append(problems, "sensitive data")
 	}
-	if hasSpecialCharsOrEmoji(message) {
+	if config.Checks.SpecialChars && hasSpecialCharsOrEmoji(message) {
 		newLog = removeSpecialCharsOrEmoji(newLog)
 		problems = append(problems, "special char or emoji")
 	}
-	if !isEnglishLetter(message) {
+	if config.Checks.EnglishOnly && !isEnglishLetter(message) {
 		tmpLog, err := translateToEnglish(newLog)
 		if err == nil {
 			newLog = tmpLog
 		}
 		problems = append(problems, "non-English")
 	}
-	if unicode.IsUpper([]rune(message)[0]) {
+	if config.Checks.CapitalLetter && unicode.IsUpper([]rune(message)[0]) {
 		newLog = toLowerCase(newLog)
 		problems = append(problems, "starting with capital letter")
 	}
@@ -140,10 +150,10 @@ func hasSpecialCharsOrEmoji(str string) bool {
 	return false
 }
 
-func hasSensitiveData(str string) bool {
+func hasSensitiveData(str string, cfg *Config) bool {
 	lowStr := strings.ToLower(str)
 
-	for _, word := range sensitiveWords {
+	for _, word := range cfg.SensitiveWords {
 		if strings.Contains(lowStr, word) {
 			return true
 		}
@@ -206,10 +216,10 @@ func translateToEnglish(text string) (string, error) {
 	return answ, nil
 }
 
-func blurSensitiveData(str string) string {
+func blurSensitiveData(str string, cfg *Config) string {
 	answ := str
 	lowStr := strings.ToLower(str)
-	for _, word := range sensitiveWords {
+	for _, word := range cfg.SensitiveWords {
 		if idx := strings.Index(lowStr, word); idx != -1 {
 			indexValStart := idx + len(word) + 1
 			indexValEnd := strings.IndexAny(answ[indexValStart:], " :,;.-=")
