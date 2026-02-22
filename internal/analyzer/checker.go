@@ -8,6 +8,17 @@ import (
 	"unicode"
 )
 
+var loggerConfigs = []LoggerConfig{
+	{
+		PkgPath:    "log/slog",
+		ExtractPkg: getSlogPkgName,
+	},
+	{
+		PkgPath:    "go.uber.org/zap",
+		ExtractPkg: getZapPkgName,
+	},
+}
+
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, file := range pass.Files {
 		ast.Inspect(file, func(node ast.Node) bool {
@@ -16,34 +27,36 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			selExpr, ok := n.Fun.(*ast.SelectorExpr)
-
-			pkgIdent, ok := selExpr.X.(*ast.Ident)
-			if !ok {
-				return true
-			}
-
-			obj := pass.TypesInfo.ObjectOf(pkgIdent)
-			if obj == nil {
-				return true
-			}
-
-			pkgName, ok := obj.(*types.PkgName)
-			if !ok {
-				return true
-			}
-
-			pkgPath := pkgName.Imported().Path()
-			if !isSlogOrZapLog(pkgPath) {
-				return true
-			}
-
 			if len(n.Args) == 0 {
+				return true
+			}
+
+			argType := pass.TypesInfo.TypeOf(n.Args[0])
+			if argType == nil || argType.String() != "string" {
+				return true
+			}
+
+			found := false
+
+			for _, cfg := range loggerConfigs {
+				if pkgName := cfg.ExtractPkg(n, pass); pkgName != nil {
+					if pkgName.Imported().Path() == cfg.PkgPath {
+						found = true
+						break
+					}
+				}
+			}
+
+			if !found {
 				return true
 			}
 
 			message := types.ExprString(n.Args[0])
 			message = strings.Trim(message, "\"")
+
+			if message == "" {
+				return true
+			}
 
 			//проверки
 			if unicode.IsUpper([]rune(message)[0]) {
@@ -67,13 +80,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	return nil, nil
-}
-
-func isSlogOrZapLog(pkgPath string) bool {
-	if pkgPath == "log/slog" || pkgPath == "go.uber.org/zap" {
-		return true
-	}
-	return false
 }
 
 func isEnglishLetter(str string) bool {
