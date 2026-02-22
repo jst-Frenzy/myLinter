@@ -40,7 +40,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 			for _, cfg := range loggerConfigs {
 				if pkgName := cfg.ExtractPkg(n, pass); pkgName != nil {
-					if pkgName.Imported().Path() == cfg.PkgPath {
+					pkgPath := pkgName.Imported().Path()
+					if strings.HasSuffix(pkgPath, cfg.PkgPath) {
 						found = true
 						break
 					}
