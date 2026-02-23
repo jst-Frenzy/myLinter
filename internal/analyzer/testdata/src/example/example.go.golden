@@ -42,9 +42,9 @@ func main() {
 	slogLogger.Error("connection failed") // +
 	zap.L().Warn("something went wrong")  // +
 
-	slogLogger.Info("user password MUST BE EDITED password") // want "log has issues: sensitive data, special char or emoji"
-	slogLogger.Debug("apikey MUST BE EDITED apiKey")         // want "log has issues: sensitive data, special char or emoji"
-	zap.L().Info("token MUST BE EDITED token")               // want "log has issues: sensitive data, special char or emoji"
+	slogLogger.Info("user password REMOVE SENSITIVE DATA password") // want "log has issues: sensitive data, special char or emoji"
+	slogLogger.Debug("apikey REMOVE SENSITIVE DATA apiKey")         // want "log has issues: sensitive data, special char or emoji"
+	zap.L().Info("token REMOVE SENSITIVE DATA token")               // want "log has issues: sensitive data, special char or emoji"
 
 	slogLogger.Info("user authenticated successfully") // +
 	slogLogger.Debug("api request completed")          // +
