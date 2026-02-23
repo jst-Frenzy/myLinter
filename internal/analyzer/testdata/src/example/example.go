@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func main() {
+func test() {
 	slogLogger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	zapLogger, _ := zap.NewProduction()
