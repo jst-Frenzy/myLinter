@@ -1,4 +1,4 @@
-module myLinter
+module github.com/jst-Frenzy/myLinter
 
 go 1.24.0
 

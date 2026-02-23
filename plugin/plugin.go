@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/jst-Frenzy/myLinter/internal/analyzer"
 	"golang.org/x/tools/go/analysis"
-	"myLinter/internal/analyzer"
 )
 
 func New(settings any) ([]*analysis.Analyzer, error) {

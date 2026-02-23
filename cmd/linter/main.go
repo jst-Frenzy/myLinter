@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/jst-Frenzy/myLinter/internal/analyzer"
 	"golang.org/x/tools/go/analysis/singlechecker"
-	"myLinter/internal/analyzer"
 )
 
 func main() {
