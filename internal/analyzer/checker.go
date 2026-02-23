@@ -75,10 +75,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				return true
 			}
 
-			if message == "" {
-				return true
-			}
-
 			newLog, problems := processLogMessage(message, cfg)
 
 			if len(problems) > 0 {
