@@ -1,9 +1,0 @@
-{
-  "sensitive_words": ["jwt: ", "pwd: ", "refresh= "],
-  "checks": {
-    "special_chars": true,
-    "capital_letter": false,
-    "english_only": false,
-    "sensitive_data": false
-  }
-}

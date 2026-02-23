@@ -228,7 +228,7 @@ func blurSensitiveData(str string, cfg *Config) string {
 			} else {
 				indexValEnd += indexValStart
 			}
-			answ = answ[:indexValStart] + "MUST BE EDITED" + answ[indexValEnd+1:]
+			answ = answ[:indexValStart] + "REMOVE SENSITIVE DATA" + answ[indexValEnd+1:]
 		}
 	}
 	return answ
